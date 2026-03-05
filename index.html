@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Plan Marathon</title>
+
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <link rel="manifest" href="manifest.json" />
+        <meta name="theme-color" content="#2c3e50" />
+
+        <style>
+            body {
+                font-family: Arial;
+                margin: 20px;
+            }
+
+            .tabs {
+                margin-bottom: 15px;
+            }
+
+            .tabButton {
+                padding: 8px 14px;
+                margin-right: 5px;
+                border: 1px solid #ccc;
+                background: #eee;
+                cursor: pointer;
+            }
+
+            .tabButton.active {
+                background: #2c3e50;
+                color: white;
+            }
+
+            .tabContent {
+                display: none;
+            }
+
+            .tabContent.active {
+                display: block;
+            }
+
+            table {
+                border-collapse: collapse;
+                margin-top: 10px;
+            }
+
+            th,
+            td {
+                border: 1px solid #ccc;
+                padding: 6px;
+                text-align: center;
+            }
+
+            input {
+                width: 90px;
+            }
+
+            select {
+                width: 90px;
+            }
+
+            button {
+                margin: 4px;
+                padding: 6px 10px;
+            }
+
+            .km10 {
+                background: #e8f4ff;
+            }
+            .semi {
+                background: #e6ffe6;
+            }
+            .km30 {
+                background: #fff3cd;
+            }
+            .km40 {
+                background: #ffd6d6;
+            }
+
+            #printArea {
+                margin-top: 20px;
+            }
+
+            @media print {
+                body * {
+                    visibility: hidden;
+                }
+
+                #printArea,
+                #printArea * {
+                    visibility: visible;
+                }
+
+                #printArea {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <h2>Plan Marathon</h2>
+
+        <div class="tabs">
+            <button class="tabButton active" onclick="openTab('plan', event)">
+                Plan Marathon
+            </button>
+            <button class="tabButton" onclick="openTab('parcours', event)">
+                Parcours
+            </button>
+        </div>
+
+        <div id="plan" class="tabContent active">
+            Heure départ :
+            <input type="time" id="startTime" value="08:00" />
+
+            <br /><br />
+
+            <button onclick="applyPlan(paces630)">6:30</button>
+            <button onclick="applyPlan(paces615)">6:15</button>
+
+            <button onclick="exportPDF()">Exporter PDF</button>
+
+            <h3>Temps total : <span id="totalTime">--:--:--</span></h3>
+
+            <div id="printArea">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Km</th>
+                            <th>Temps km</th>
+                            <th>Heure passage</th>
+                            <th>Délai</th>
+                            <th>Ravitaillement</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="parcours" class="tabContent">
+            <h3>Parcours</h3>
+
+            <div
+                class="strava-embed-placeholder"
+                data-embed-type="route"
+                data-embed-id="3314660708901242298"
+                data-style="standard"
+                data-map-hash="11.3/41.3986/2.1843"
+                data-from-embed="true"
+            ></div>
+
+            <script src="https://strava-embeds.com/embed.js"></script>
+        </div>
+
+        <script>
+            const paces630 = [
+                "00:06:25",
+                "00:06:31",
+                "00:06:40",
+                "00:06:31",
+                "00:06:29",
+                "00:06:34",
+                "00:06:30",
+                "00:06:26",
+                "00:06:29",
+                "00:06:17",
+                "00:06:37",
+                "00:06:40",
+                "00:06:29",
+                "00:06:35",
+                "00:06:37",
+                "00:06:30",
+                "00:06:29",
+                "00:06:20",
+                "00:06:34",
+                "00:06:27",
+                "00:06:32",
+                "00:06:25",
+                "00:06:27",
+                "00:06:19",
+                "00:06:36",
+                "00:06:32",
+                "00:06:27",
+                "00:06:28",
+                "00:06:31",
+                "00:06:30",
+                "00:06:32",
+                "00:06:31",
+                "00:06:33",
+                "00:06:27",
+                "00:06:31",
+                "00:06:31",
+                "00:06:31",
+                "00:06:32",
+                "00:06:29",
+                "00:06:34",
+                "00:06:33",
+                "00:06:45",
+                "00:03:16",
+            ];
+
+            const paces615 = [
+                "00:06:10",
+                "00:06:16",
+                "00:06:25",
+                "00:06:16",
+                "00:06:14",
+                "00:06:18",
+                "00:06:15",
+                "00:06:11",
+                "00:06:14",
+                "00:06:03",
+                "00:06:21",
+                "00:06:24",
+                "00:06:14",
+                "00:06:20",
+                "00:06:21",
+                "00:06:15",
+                "00:06:14",
+                "00:06:06",
+                "00:06:19",
+                "00:06:12",
+                "00:06:17",
+                "00:06:10",
+                "00:06:12",
+                "00:06:05",
+                "00:06:20",
+                "00:06:17",
+                "00:06:12",
+                "00:06:13",
+                "00:06:16",
+                "00:06:15",
+                "00:06:17",
+                "00:06:16",
+                "00:06:18",
+                "00:06:12",
+                "00:06:16",
+                "00:06:16",
+                "00:06:16",
+                "00:06:17",
+                "00:06:14",
+                "00:06:18",
+                "00:06:18",
+                "00:06:29",
+                "00:03:09",
+            ];
+
+            const tbody = document.getElementById("tbody");
+
+            function createTable() {
+                for (let km = 0; km <= 42; km++) {
+                    let row = document.createElement("tr");
+
+                    if (km === 10) row.classList.add("km10");
+                    if (km === 21) row.classList.add("semi");
+                    if (km === 30) row.classList.add("km30");
+                    if (km === 40) row.classList.add("km40");
+
+                    let pace = km === 0 ? "" : paces630[km - 1];
+
+                    row.innerHTML = `
+<td>${km}</td>
+<td><input class="pace" value="${pace}"></td>
+<td class="passage">--</td>
+<td><input class="delay" value="00:00:00"></td>
+<td>
+<select class="fuel">
+<option>Non</option>
+<option>Plan A</option>
+<option>Plan B</option>
+</select>
+</td>
+`;
+
+                    tbody.appendChild(row);
+                }
+            }
+
+            function parseTime(t) {
+                if (!t) return 0;
+
+                let p = t.split(":").map(Number);
+
+                return p[0] * 3600 + p[1] * 60 + p[2];
+            }
+
+            function formatTime(s) {
+                let h = Math.floor(s / 3600) % 24;
+                let m = Math.floor((s % 3600) / 60);
+                let sec = s % 60;
+
+                return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+            }
+
+            function calculate() {
+                let start = document.getElementById("startTime").value;
+
+                let sp = start.split(":");
+
+                let total = sp[0] * 3600 + sp[1] * 60;
+
+                let startSeconds = total;
+
+                let rows = document.querySelectorAll("#tbody tr");
+
+                rows.forEach((row, i) => {
+                    if (i === 0) {
+                        row.querySelector(".passage").innerText = start + ":00";
+                    } else {
+                        let pace = row.querySelector(".pace").value;
+                        let delay = row.querySelector(".delay").value;
+
+                        total += parseTime(pace);
+                        total += parseTime(delay);
+
+                        row.querySelector(".passage").innerText =
+                            formatTime(total);
+                    }
+                });
+
+                document.getElementById("totalTime").innerText = formatTime(
+                    total - startSeconds,
+                );
+
+                saveData();
+            }
+
+            function applyPlan(plan) {
+                document.querySelectorAll("#tbody tr").forEach((row, i) => {
+                    if (i > 0) {
+                        row.querySelector(".pace").value = plan[i - 1];
+                    }
+                });
+
+                calculate();
+            }
+
+            function exportPDF() {
+                window.print();
+            }
+
+            function saveData() {
+                let data = [];
+
+                document.querySelectorAll("#tbody tr").forEach((row) => {
+                    data.push({
+                        pace: row.querySelector(".pace").value,
+                        delay: row.querySelector(".delay").value,
+                        fuel: row.querySelector(".fuel").value,
+                    });
+                });
+
+                localStorage.setItem("marathonData", JSON.stringify(data));
+                localStorage.setItem(
+                    "startTime",
+                    document.getElementById("startTime").value,
+                );
+            }
+
+            function loadData() {
+                let data = JSON.parse(localStorage.getItem("marathonData"));
+                let start = localStorage.getItem("startTime");
+
+                if (start) document.getElementById("startTime").value = start;
+
+                if (!data) return;
+
+                document.querySelectorAll("#tbody tr").forEach((row, i) => {
+                    if (data[i]) {
+                        row.querySelector(".pace").value = data[i].pace;
+                        row.querySelector(".delay").value = data[i].delay;
+                        row.querySelector(".fuel").value = data[i].fuel;
+                    }
+                });
+            }
+
+            function openTab(tab, event) {
+                document
+                    .querySelectorAll(".tabContent")
+                    .forEach((el) => el.classList.remove("active"));
+                document
+                    .querySelectorAll(".tabButton")
+                    .forEach((el) => el.classList.remove("active"));
+
+                document.getElementById(tab).classList.add("active");
+
+                event.target.classList.add("active");
+            }
+
+            createTable();
+            loadData();
+
+            document.addEventListener("input", calculate);
+            document
+                .getElementById("startTime")
+                .addEventListener("change", calculate);
+
+            calculate();
+
+            if ("serviceWorker" in navigator) {
+                navigator.serviceWorker.register("sw.js");
+            }
+        </script>
+    </body>
+</html>
